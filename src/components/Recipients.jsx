@@ -6,8 +6,8 @@ const Container = styled.article`
   justify-content: flex-start;
   width: 50%;
 `;
-const UserList = () => {
-  return <Container>UserList</Container>;
+const Recipients = () => {
+  return <Container>Recipients</Container>;
 };
 
-export default UserList;
+export default Recipients;

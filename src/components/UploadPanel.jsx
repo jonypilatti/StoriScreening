@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 
 const UploadPanel = () => {
   const [file, setFile] = useState({
-    id:""
-  });	
+    id: "",
+  });
   return <div>UploadPanel</div>;
 };
 
