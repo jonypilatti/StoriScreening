@@ -1,10 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
-import newsSlice from "./newsSlice";
-import userSlice from "./userSlice";
+import recipientsSlice from "./recipientsSlice";
 const store = configureStore({
   reducer: {
-    news: newsSlice,
-    user: userSlice,
+    data: recipientsSlice,
   },
 });
 

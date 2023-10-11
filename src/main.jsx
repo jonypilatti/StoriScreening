@@ -5,10 +5,16 @@ import Root from "./routes/root";
 import ErrorPage from "./routes/error-page";
 import store from "./redux/store";
 import { Provider } from "react-redux";
+import Admin from "./routes/admin";
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Root />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: "/admin",
+    element: <Admin />,
     errorElement: <ErrorPage />,
   },
 ]);
