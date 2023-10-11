@@ -4,6 +4,14 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 require("./database/connection");
+const fs = require("fs");
+
+const uploadsDirectory = "uploads";
+
+if (!fs.existsSync(uploadsDirectory)) {
+  fs.mkdirSync(uploadsDirectory);
+}
+
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use("/", routes);

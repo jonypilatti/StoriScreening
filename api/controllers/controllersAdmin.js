@@ -1,4 +1,32 @@
-const queryManager = require("../utils/queryManager"); // Import the queryManager function
+const queryManager = require("../utils/queryManager");
+const { Resend } = require("resend");
+const dotenv = require("dotenv");
+dotenv.config();
+
+const sendNewsletter = async (title, content, recipient) => {
+  const resend = new Resend(process.env.RESEND_APIKEY);
+  try {
+    const { email, name, lastname } = recipient;
+    console.log(email, name, lastname, "las cosas");
+    const contentToSend = `
+    <h1>Hi ${name} ${lastname}</h1>
+    <br>
+    <p>${content}</p>
+`;
+    await resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: email,
+      subject: title,
+      html: contentToSend,
+      headers: {
+        "List-Unsubscribe": "<https://example.com/unsubscribe>",
+      },
+    });
+  } catch (err) {
+    console.error(err, "el error de sendNewsletter");
+    throw new Error("There was an error sending the newsletter");
+  }
+};
 
 // Controller function to associate a newsletter with a recipient
 const associateNewsletterRecipient = async (newsletterId, recipientId) => {
@@ -44,32 +72,9 @@ const getNewslettersForRecipient = async (recipientId) => {
     throw error; // Re-throw the error to be handled elsewhere
   }
 };
-const fetchNewsletterStatistics = async () => {
-  // Write SQL queries to retrieve statistics and format the data as needed
-  try {
-    const newslettersSentQuery = "SELECT COUNT(*) FROM Newsletters WHERE sent_at IS NOT NULL";
-    const recipientsCountQuery = "SELECT COUNT(*) FROM Recipients";
-
-    const [newslettersSentResult, recipientsCountResult] = await Promise.all([
-      queryManager(newslettersSentQuery),
-      queryManager(recipientsCountQuery),
-    ]);
-
-    const statistics = {
-      newslettersSent: newslettersSentResult.rows[0].count,
-      recipientsCount: recipientsCountResult.rows[0].count,
-      // Add more statistics as needed
-    };
-
-    return statistics;
-  } catch (err) {
-    console.log(err, "the error of fetchNewsletterStatistics");
-    throw new Error(err?.message || "Error fetching newsletter statistics");
-  }
-};
 
 module.exports = {
-  fetchNewsletterStatistics,
+  sendNewsletter,
   associateNewsletterRecipient,
   getRecipientsOfNewsletter,
   getNewslettersForRecipient,

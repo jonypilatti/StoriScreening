@@ -1,18 +1,24 @@
 const express = require("express");
-const multer = require("multer");
 const queryManager = require("../utils/queryManager"); // Import the queryManager function
 const router = express.Router();
-const upload = multer({
+const { sendNewsletter, associateNewsletterRecipient } = require("../controllers/controllersAdmin");
+const multer = require("multer");
+const path = require("path");
+const storage = multer({
+  limits: { fileSize: 25000000 },
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, "uploads/"); // Define the folder where uploaded files will be stored
     },
     filename: function (req, file, cb) {
-      cb(null, Date.now() + "-" + file.originalname);
+      console.log(file, "el file");
+      const timestamp = Date.now();
+      const extension = path.extname(file.originalname);
+      cb(null, `${timestamp}${extension}`);
     },
   }),
 });
-
+const upload = multer({ storage: storage.storage });
 router.get("/recipients", async (req, res) => {
   try {
     const query = "SELECT * FROM Recipients";
@@ -51,12 +57,10 @@ router.post("/addRecipient", async (req, res) => {
 router.delete("/deleteRecipient", async (req, res) => {
   const { id } = req.query; // Use req.query to retrieve query parameters
   try {
-    console.log(req.query, "the id that arrives");
     if (id) {
       const queryVerifier = "DELETE FROM Recipients WHERE id=$1";
       const valueVerifier = [id];
       await queryManager(queryVerifier, valueVerifier);
-
       return res.status(200).json({ Error: null });
     } else return res.status(200).json({ Error: "Please select a recipient to remove!" });
   } catch (err) {
@@ -72,10 +76,10 @@ router.get("/fetchEmailsSent", async (req, res) => {
 
   try {
     const result = await queryManager(query, values);
-    res.status(200).json({ message: "Emails sent retrieved successfully", data: result });
+    return res.status(200).json({ message: "Emails sent retrieved successfully", data: result });
   } catch (error) {
     console.error("Error fetching emails sent:", error);
-    res.status(500).json({ Error: "There was an error fetching emails sent" });
+    return res.status(500).json({ Error: "There was an error fetching emails sent" });
   }
 });
 
@@ -85,27 +89,39 @@ router.get("/fetchNewsLetters", async (req, res) => {
 
   try {
     const newsletters = await queryManager(query, values);
-    res.status(200).json({ message: "Newsletters obtained successfully", Error: null, data: newsletters });
+    return res.status(200).json({ message: "Newsletters obtained successfully", Error: null, data: newsletters });
   } catch (error) {
     console.error("Error fetching newsletters:", error);
-    res.status(500).json({ Error: "There was an error fetching the newsletters" });
+    return res.status(500).json({ Error: "There was an error fetching the newsletters" });
   }
 });
 
-router.get("/uploadNewsletter", upload.single("newsletter"), async (req, res) => {
-  const { title, content } = req.body;
+router.post("/sendNewsletter", upload.single("newsletter"), async (req, res) => {
+  const { title, content, temporaryRecipients } = req.body;
+  console.log(temporaryRecipients, typeof temporaryRecipients, "los recipients");
   const filePath = req.file.path;
 
-  console.log(filePath, "el file path");
-  console.log(title, content, "las cosas");
-  const query = "INSERT INTO Newsletters (title, content) VALUES ($1, $2)";
-  const values = [title, content];
+  const insertNewsletter = "INSERT INTO Newsletters (title, content) VALUES ($1, $2)";
+  const valuesInsertNewsletter = [title, content];
   try {
-    await queryManager(query, values);
-    res.status(200).json({ message: "Newsletter uploaded successfully", Error: null });
+    // Insert a record into the Newsletters table to store the newsletter
+    await queryManager(insertNewsletter, valuesInsertNewsletter);
+    const queryIdNewsletters = "SELECT id FROM Newsletters WHERE title=$1 AND content=$2";
+    const valuesIdNewsletters = [title, content];
+    const idNewsLetters = await queryManager(queryIdNewsletters, valuesIdNewsletters);
+
+    // Send the newsletter to the recipients and associate the relation in the table
+    temporaryRecipients.forEach((el) => {
+      const element = JSON.parse(el);
+      console.log(element, "el elemento");
+      associateNewsletterRecipient(idNewsLetters?.[0]?.id, element.id);
+      sendNewsletter(title, content, element);
+    });
+
+    return res.status(200).json({ message: "Newsletter sent and uploaded successfully", Error: null });
   } catch (error) {
     console.error("Error inserting newsletter:", error);
-    res.status(500).json({ Error: "There was an error uploading the newsletter" });
+    return res.status(500).json({ Error: "There was an error uploading the newsletter" });
   }
 });
 
@@ -119,10 +135,10 @@ router.post("/addEmail", async (req, res) => {
 
   try {
     await queryManager(query, values);
-    res.status(200).json({ message: "Single email added successfully" });
+    return res.status(200).json({ message: "Single email added successfully" });
   } catch (error) {
     console.error("Error adding single email:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -135,13 +151,12 @@ router.post("/submitEmailList", async (req, res) => {
 
   try {
     await Promise.all(emailList.map((email) => queryManager(query, [email])));
-    res.status(200).json({ message: "Email list submitted successfully" });
+    return res.status(200).json({ message: "Email list submitted successfully" });
   } catch (error) {
     console.error("Error submitting email list:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
-router.post("/sendNewsletter", async (req, res) => {});
 
 // Route for unsubscribing users from newsletters
 router.post("/unsubscribe", async (req, res) => {
@@ -153,25 +168,11 @@ router.post("/unsubscribe", async (req, res) => {
 
   try {
     await queryManager(query, values);
-    res.status(200).json({ message: "User unsubscribed successfully" });
+    return res.status(200).json({ message: "User unsubscribed successfully" });
   } catch (error) {
     console.error("Error unsubscribing user:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-// Route for fetching newsletter statistics
-router.get("/newsletter-statistics", async (req, res) => {
-  try {
-    // Fetch statistics from your database and format the response as needed
-    const statistics = await fetchNewsletterStatistics();
-    res.status(200).json(statistics);
-  } catch (error) {
-    console.error("Error fetching newsletter statistics:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// Helper function to fetch newsletter statistics from the database
 
 module.exports = router;
