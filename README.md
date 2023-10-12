@@ -74,3 +74,5 @@ To access the admin panel:
 2. Click the "Admin Panel" link/button.
 
 You will be redirected to the admin panel where you can manage various admin-related tasks.
+
+For email sending I used https://resend.com API, it works but I don't have emails with verified domain. Thus, it only works right now on the registered email which is for development.
