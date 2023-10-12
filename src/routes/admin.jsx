@@ -36,7 +36,7 @@ const Admin = () => {
     <Container>
       <Navbar />
       <ListsContainer>
-        <AddUser />
+        <AddUser recipients={recipients} />
         <Recipients recipients={recipients} />
       </ListsContainer>
       <Dashboard recipients={recipients} emailsSent={emails} newsletters={newsletters} />

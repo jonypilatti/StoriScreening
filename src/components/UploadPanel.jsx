@@ -31,7 +31,7 @@ const UploadPanel = ({ onFileUpload }) => {
 
   return (
     <Container {...getRootProps()} className={`dropzone ${isDragActive ? "active" : ""}`}>
-      <input accept=".pdf,.png" {...getInputProps()} />
+      <input type="file" name="newsletter" accept=".pdf,.png" {...getInputProps()} />
       <p style={{ padding: "15px" }}>Drag & Drop files here or click to select</p>
     </Container>
   );

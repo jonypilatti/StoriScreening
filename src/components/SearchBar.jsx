@@ -4,7 +4,7 @@ const Input = styled.input`
   display: flex;
   align-self: flex-start;
   border-radius: 20px;
-  border: 1px solid lightgray;
+  border: 2px solid lightgray;
   padding: 12px;
   color: black;
   font-size: 14px;

@@ -46,3 +46,25 @@ export function ValidateLastName(lastName, errors, setErrors) {
   setErrors({ ...errors, lastName: null });
   return null;
 }
+
+export function ValidatePassword(password, errors, setErrors) {
+  console.log("Password input:", password); // Add this line for debugging
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&.*]).{8,}$/;
+
+  if (password.length === 0) {
+    setErrors({ ...errors, password: null });
+    return null;
+  }
+
+  if (!passwordRegex.test(password)) {
+    console.log("Invalid password case");
+    setErrors({
+      ...errors,
+      password: "Invalid password (min 8 characters, at least 1 uppercase, 1 lowercase, 1 number, and 1 symbol)",
+    });
+    return "Invalid password (min 8 characters, at least 1 uppercase, 1 lowercase, 1 number, and 1 symbol)";
+  }
+
+  setErrors({ ...errors, password: null });
+  return null;
+}

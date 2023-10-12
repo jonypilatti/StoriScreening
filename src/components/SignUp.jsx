@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { LogIn } from "../redux/userSlice";
-import { ValidateEmail, ValidatePassword } from "../assets/validations/validations";
+import { LogIn, SignUp } from "../redux/userSlice";
+import { ValidateEmail, ValidateLastName, ValidateName, ValidatePassword } from "../assets/validations/validations";
 import Navbar from "./Navbar";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
@@ -13,17 +13,10 @@ const Container = styled.div`
   height: 100vh;
   background-image: linear-gradient(90deg, #0cbccc 0%, #0069c0 100%);
 `;
-const ErrorText = styled.p`
-  color: orange;
-  text-align: center
-  padding: 15px;
-  @media (max-width: 550px) {
-    font-size: 16px;
-  }
-`;
 const ContainerInputs = styled.form`
   display: flex;
   flex-direction: column;
+  width: 100%;
   align-items: center;
   margin: 20px;
   gap: 10px;
@@ -80,22 +73,38 @@ const Button = styled.button`
     width: 100px;
   }
 `;
-
+const Placeholder = styled.span`
+  display: flex;
+  color: lightgray;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+`;
+const ErrorText = styled.p`
+  color: orange;
+  margin: 0;
+  padding: 0;
+  @media (max-width: 550px) {
+    font-size: 16px;
+  }
+`;
 const Login = () => {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [password, setPassword] = useState("");
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  console.log(errors, "lños errors");
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!errors.email && !errors.password) dispatch(LogIn({ email, password, navigate }));
-    else Swal.fire("Error", "Please enter a valid email and password", "error");
+    if (!errors.email && !errors.password && !errors.name && !errors.lastName)
+      dispatch(SignUp({ email, password, navigate }));
+    else Swal.fire("Error", "Please enter a valid attributes", "error");
   };
   return (
     <Container>
       <Navbar></Navbar>
-      <Title>Log In</Title>
+      <Title>Sign Up</Title>
       <ContainerInputs onSubmit={handleSubmit}>
         <Input
           onBlur={() => ValidateEmail(email, errors, setErrors)}
@@ -112,8 +121,9 @@ const Login = () => {
           type="password"
           placeholder="Password"
         />
+        <Placeholder>Min 8 characters, at least 1 uppercase, 1 lowercase, 1 number, and 1 symbol</Placeholder>
         {errors.password && <ErrorText>{errors.password}</ErrorText>}
-        <Button type="submit">Login</Button>
+        <Button type="submit">Sign Up</Button>
       </ContainerInputs>
     </Container>
   );

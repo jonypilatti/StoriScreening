@@ -43,6 +43,7 @@ const InputEmail = styled.input`
   @media (max-width: 500px) {
     font-size: 12px;
     min-width: 100px;
+    width: 85%;
   }
   @media (max-width: 300px) {
     width: 80%;
@@ -59,6 +60,7 @@ const InputName = styled.input`
   @media (max-width: 500px) {
     font-size: 12px;
     min-width: 100px;
+    width: 85%;
   }
   @media (max-width: 300px) {
     width: 80%;
@@ -74,6 +76,7 @@ const InputLastName = styled.input`
   border-radius: 20px;
   @media (max-width: 500px) {
     font-size: 12px;
+    width: 85%;
     min-width: 100px;
   }
   @media (max-width: 300px) {
@@ -108,7 +111,17 @@ const ErrorMessage = styled.span`
   font-size: 16px;
   font-weight: bold;
 `;
-const AddUser = () => {
+const Placeholder = styled.span`
+  display: flex;
+  color: lightgray;
+  text-align: flex-start;
+  padding-top: 0;
+  margin-top: -5px;
+  margin-bottom: -10px;
+  padding-left: 10px;
+  font-size: 14px;
+`;
+const AddUser = ({ recipients }) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -132,13 +145,14 @@ const AddUser = () => {
     <Container>
       <Title>Add user to the recipients list</Title>
       <FormAdd onSubmit={(e) => onSubmit(e, email, name, lastName)}>
+        <Placeholder>Required</Placeholder>
         <InputEmail
           onBlur={() => ValidateEmail(email, errors, setErrors)}
           onChange={handleEmail}
           value={email}
+          required={true}
           placeholder="Email"
         ></InputEmail>
-
         {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
         <InputName
           onBlur={() => ValidateName(name, errors, setErrors)}
@@ -146,6 +160,7 @@ const AddUser = () => {
           value={name}
           placeholder="Recipient's name"
         ></InputName>
+        <Placeholder>Optional, if not provided the user will not receive emails with his name</Placeholder>
         {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
         <InputLastName
           onChange={handleLastName}
@@ -153,10 +168,11 @@ const AddUser = () => {
           value={lastName}
           placeholder="Recipient's last name"
         ></InputLastName>
+        <Placeholder>Optional</Placeholder>
         {errors.lastName && <ErrorMessage>{errors.lastName}</ErrorMessage>}
         <FormButton type="submit">Add</FormButton>
       </FormAdd>
-      <Schedules />
+      <Schedules recipients={recipients} />
     </Container>
   );
 };

@@ -4,7 +4,6 @@ const queryExecutioner = async (query, values) => {
   const queryAsync = promisify(pool.query).bind(pool);
 
   try {
-    console.log("llego a la query y fallo", query, values);
     const result = await queryAsync(query, values);
     return result.rows;
   } catch (error) {

@@ -90,40 +90,109 @@ export const AddRecipient = createAsyncThunk(
     }
   }
 );
-export const DeleteRecipient = createAsyncThunk("recipients/deleteRecipient", async ({ id }, { dispatch }) => {
+export const DeleteRecipient = createAsyncThunk("recipients/deleteRecipient", async ({ id, email }, { dispatch }) => {
   try {
-    const url = `/deleteRecipient?id=${id}`;
+    const url = id ? `/deleteRecipient?id=${id}` : `/deleteRecipient?email=${email}`;
+    console.log(url, "la url de envio");
     const response = await instance.delete(url); // Replace with your API endpoint
     if (!response.data.Error) {
       dispatch(fetchRecipients());
       Swal.fire("Success", "Recipient deleted succesfully", "success");
       return response.data;
+    } else if (response.data.Error === "The email is not subscribed") {
+      throw new Error("The email is not subscribed");
     } else {
-      Swal.fire("Error", "Could not delete the recipient succesfully", "error");
       throw new Error("Could not delete the recipient successfully");
     }
   } catch (error) {
-    Swal.fire("Error", "Could not delete the recipient succesfully", "error");
-    return "Could not add the recipient successfully";
+    if (error?.message === "The email is not subscribed") {
+      Swal.fire("Error", "The email is not subscribed", "error");
+      return "The email is not subscribed";
+    } else {
+      Swal.fire("Error", "Could not delete the recipient succesfully", "error");
+      return "Could not add the recipient successfully";
+    }
   }
 });
 
-export const sendNewsletter = createAsyncThunk("recipients/sendNewsletter", async ({ title, content, file }) => {
-  try {
-    const data = { title, content, file };
-    const response = await instance.post("/sendNewsletter", data); // Replace with your API endpoint
-    if (!response.data.Error) {
-      Swal.fire("Success", "Newsletter sent succesfully", "success");
-      return response.data;
-    } else {
-      Swal.fire("Error", "Could not send the newsletter succesfully", "error");
-      throw new Error("Could not send the newsletter succesfully");
+export const sendNewsletter = createAsyncThunk(
+  "recipients/sendNewsletter",
+  async ({ title, content, uploadedFiles, temporaryRecipients }) => {
+    try {
+      console.log(temporaryRecipients, typeof temporaryRecipients, "los temp");
+      const formData = new FormData();
+      formData.append("title", title);
+      temporaryRecipients.forEach((recipient) => {
+        formData.append("temporaryRecipients", JSON.stringify(recipient));
+      });
+      formData.append("content", content);
+      formData.append("newsletter", uploadedFiles[0], uploadedFiles[0].name);
+      const response = await instance.post("/sendNewsletter", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log(response.data, "la response");
+      if (!response.data.Error) {
+        Swal.fire("Success", "Newsletter sent succesfully", "success");
+        return response.data;
+      } else if (response.data.Error === "The newsletter already exists") {
+        throw new Error("The newsletter already exists");
+      } else {
+        throw new Error("Could not send the newsletter succesfully");
+      }
+    } catch (error) {
+      console.log(Error, "el error de sendNewsletter");
+      if (error?.message === "The newsletter already exists") {
+        Swal.fire("Error", "The newsletter already exists", "error");
+        return "The newsletter already exists";
+      } else {
+        Swal.fire("Error", "Could not send the newsletter succesfully", "error");
+        return "Could not send the newsletter succesfully";
+      }
     }
-  } catch (error) {
-    Swal.fire("Error", "Could not send the newsletter succesfully", "error");
-    return "Could not send the newsletter succesfully";
   }
-});
+);
+
+export const scheduleNewsletter = createAsyncThunk(
+  "recipients/scheduleNewsletter",
+  async ({ title, content, uploadedFiles, temporaryRecipients, scheduledAt }) => {
+    try {
+      console.log(scheduledAt, "lo que busco");
+      const formData = new FormData();
+      formData.append("title", title);
+      temporaryRecipients.forEach((recipient) => {
+        formData.append("temporaryRecipients", JSON.stringify(recipient));
+      });
+      formData.append("content", content);
+      formData.append("newsletter", uploadedFiles[0], uploadedFiles[0].name);
+      formData.append("scheduledAt", scheduledAt);
+      const response = await instance.post("/scheduleNewsletter", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log(response.data, "la response");
+      if (!response.data.Error) {
+        Swal.fire("Success", "Newsletter scheduled succesfully", "success");
+        return response.data;
+      } else if (response.data.Error === "The newsletter is already scheduled") {
+        throw new Error("The newsletter is already scheduled");
+      } else {
+        throw new Error("Could not schedule the newsletter succesfully");
+      }
+    } catch (error) {
+      console.log(Error, "el error de sendNewsletter");
+      if (error?.message === "The newsletter is already scheduled") {
+        Swal.fire("Error", "The newsletter is already scheduled", "error");
+        return "The newsletter is already scheduled";
+      } else {
+        Swal.fire("Error", "Could not schedule the newsletter succesfully", "error");
+        return "Could not schedule the newsletter succesfully";
+      }
+    }
+  }
+);
 const initialState = {
   recipients: [],
   emailsSent: [],
@@ -199,6 +268,28 @@ const dataSlice = createSlice({
         state.status = "succeeded";
       })
       .addCase(fetchNewsletters.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      });
+    builder
+      .addCase(sendNewsletter.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(sendNewsletter.fulfilled, (state) => {
+        state.status = "succeeded";
+      })
+      .addCase(sendNewsletter.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      });
+    builder
+      .addCase(scheduleNewsletter.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(scheduleNewsletter.fulfilled, (state) => {
+        state.status = "succeeded";
+      })
+      .addCase(scheduleNewsletter.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
       });

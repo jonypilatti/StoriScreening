@@ -1,7 +1,7 @@
 const queryManager = require("../utils/queryManager");
 
 const verifyPassword = (password, userPassword) => {
-  console.log(password, userPassword, "el password y el userpassword");
+  console.log(password, userPassword, "las pass que comparo");
   if (password === userPassword) return true;
   else return false;
 };

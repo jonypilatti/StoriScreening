@@ -1,13 +1,12 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import SearchBar from "./SearchBar";
-import { DeleteRecipient, sendNewsletter } from "../redux/recipientsSlice";
-import UploadPanel from "./UploadPanel";
+import { DeleteRecipient } from "../redux/recipientsSlice";
 import Swal from "sweetalert2";
 const Container = styled.article`
   display: flex;
-  padding: 15px;
+  padding: 0px;
   flex-direction: column;
   justify-content: flex-start;
   width: 100%;
@@ -30,6 +29,8 @@ const Container = styled.article`
 const Title = styled.h1`
   text-align: flex-start;
   text-shadow: 3px 4px 1px gray;
+  margin-top: 51.2px;
+  margin-bottom: 51.2px;
   @media (max-width: 500px) {
     font-size: 16px;
   }
@@ -41,8 +42,8 @@ const RecipientsList = styled.ol`
   flex-direction: column;
   background-color: white;
   color: black;
-  width: 90%;
   border-radius: 12px;
+  max-height: 400px;
   padding: 15px;
   min-height: 200px;
   overflow-y: scroll;
@@ -62,6 +63,7 @@ const RecipientsList = styled.ol`
   }
   @media (max-width: 500px) {
     font-size: 12px;
+    width: 90%;
   }
   @media (max-width: 300px) {
     align-self: center;
@@ -100,7 +102,7 @@ const ButtonRemove = styled.button`
     color: #0cbccc;
   }
   @media (max-width: 500px) {
-    width: 100px;
+    width: 130px;
   }
 `;
 
@@ -120,7 +122,7 @@ const ManageRecipients = ({ recipients }) => {
       <Title>Newsletter's recipients</Title>
       <SearchBar search={search} setSearch={setSearch}></SearchBar>
       <RecipientsList>
-        {searchedRecipient?.map((el, index) => (
+        {searchedRecipient?.map((el) => (
           <Recipient
             style={{
               backgroundColor: selectedRecipient === el.id ? "#ff368f" : "white",
@@ -141,7 +143,7 @@ const ManageRecipients = ({ recipients }) => {
         ))}
       </RecipientsList>
 
-      <ButtonRemove onClick={() => handleRemove(selectedRecipient)}>Remove from database</ButtonRemove>
+      <ButtonRemove onClick={() => handleRemove(selectedRecipient)}>Unsubscribe user</ButtonRemove>
     </Container>
   );
 };

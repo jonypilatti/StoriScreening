@@ -2,25 +2,39 @@ const queryManager = require("../utils/queryManager");
 const { Resend } = require("resend");
 const dotenv = require("dotenv");
 dotenv.config();
+const fs = require("fs");
 
-const sendNewsletter = async (title, content, recipient) => {
-  const resend = new Resend(process.env.RESEND_APIKEY);
+const resend = new Resend(process.env.RESEND_APIKEY);
+
+const sendNewsletter = async (title, content, recipient, file, newsletterId) => {
   try {
     const { email, name, lastname } = recipient;
-    console.log(email, name, lastname, "las cosas");
     const contentToSend = `
-    <h1>Hi ${name} ${lastname}</h1>
-    <br>
+    <h3>Dear ${name ? name : "User"}</h3>
     <p>${content}</p>
+    <br/>
+    To unsubscribe from our emails, click <a href="http://localhost:5173/unsubscribe">here</a>.
 `;
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: email,
-      subject: title,
-      html: contentToSend,
-      headers: {
-        "List-Unsubscribe": "<https://example.com/unsubscribe>",
-      },
+    const fileData = await fs.readFile(file.path, async (err, data) => {
+      if (err) throw err;
+      await resend.emails.send({
+        from: process.env.RESEND_EMAIL_FROM,
+        to: [email],
+        subject: title,
+        html: contentToSend,
+        attachments: [
+          {
+            filename: file.originalname,
+            content: data,
+          },
+        ],
+        headers: {
+          "List-Unsubscribe": "http://localhost:5173/unsubscribe",
+        },
+      });
+      const emailSentQuery = "INSERT INTO EmailsSent (newsletterid, recipientid) VALUES ($1, $2)";
+      const values = [newsletterId, recipient.id];
+      await queryManager(emailSentQuery, values);
     });
   } catch (err) {
     console.error(err, "el error de sendNewsletter");
@@ -46,12 +60,11 @@ const associateNewsletterRecipient = async (newsletterId, recipientId) => {
 const getRecipientsOfNewsletter = async (newsletterId) => {
   try {
     // Use a SQL JOIN operation to retrieve recipients of the specified newsletter
-
     const RecipientsQuery =
       "SELECT Recipients.* FROM Recipients JOIN NewsletterRecipients ON Recipients.id = NewsletterRecipients.recipient_id WHERE NewsletterRecipients.newsletter_id = $1";
     const values = [newsletterId];
     const result = await queryManager(RecipientsQuery, values);
-    return result.rows;
+    return result;
   } catch (error) {
     console.error("Error retrieving recipients of newsletter:", error);
     throw error; // Re-throw the error to be handled elsewhere
