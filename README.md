@@ -22,10 +22,10 @@ To get started with the app, follow these steps:
 3. Start the development server:
 
    ```bash
-   npm start
+   npm run dev
    ```
 
-Your app should now be running on `http://localhost:3000`.
+Once you have done that, you have to open two different terminals, the first is on the root directory, where Your app should now be running on `http://localhost:5173`. The second terminal you have to open is inside the /api directory, there you have to run npm start to run the backend server.
 
 ## Sign Up
 
